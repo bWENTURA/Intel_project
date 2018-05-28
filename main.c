@@ -20,21 +20,21 @@ int main(int argc, char * argv[]){
     NULL, ALLEGRO_MESSAGEBOX_ERROR);
     return 0;
   }
-  display = al_create_display(800,600);
+  display = al_create_display(550,550);
   if(!display) {
     al_show_native_message_box(display, "Error", "Error", "Failed to initialize display!", NULL, ALLEGRO_MESSAGEBOX_ERROR);
     return 0;
   }
-  image = al_load_bitmap("image.png");
+  image = al_load_bitmap("bitmap_out.bmp");
   if(!image) {
     al_show_native_message_box(display, "Error", "Error", "Failed to load image!",
     NULL, ALLEGRO_MESSAGEBOX_ERROR);
     al_destroy_display(display);
     return 0;
   }
-  al_draw_bitmap(image,200,200,0);
+  al_draw_bitmap(image,38,38,0);
   al_flip_display();
-  al_rest(2);
+  al_rest(5);
   al_destroy_display(display);
   al_destroy_bitmap(image);
 
