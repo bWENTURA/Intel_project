@@ -4,36 +4,27 @@ f:
 	push rbp
 	mov rbp, rsp
 	push rdx
+	push rcx
+
+
+	mov rax, rdx
+	mul rcx
+	mov rcx, 3
+	mul rcx
+
 	push rax
-	push rdi
 
-	mov rdx, [rbp - 24]
-	mov rax, [rbp - 24]
+	mov rax, [rbp - 8]
+	mov rcx, [rbp -16]
+	mul rcx
 
-	mov ch, [rdx]
-	cmp ch, 0
-	je end
-	inc rax
-	mov cl, [rax]
-	cmp cl, 0
-	je end
-
-	loop:
-		mov [rdx], cl
-		mov [rax], ch
-		add rdx, 2
-		mov ch, [rdx]
-		cmp ch, 0
-		je end
-		add rax, 2
-		mov cl, [rax]
-		cmp cl, 0
-		jne	loop
+	mov rax, [rbp -8]
+	mov DWORD[r8], eax
 
 
-end:
-	pop rdi
 	pop rax
+end:
+	pop rcx
 	pop rdx
 	mov rsp, rbp
 	pop rbp
