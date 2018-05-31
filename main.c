@@ -17,10 +17,13 @@ int main()
 {
   ALLEGRO_DISPLAY *display = NULL;
   ALLEGRO_EVENT_QUEUE *event_queue = NULL;
-  ALLEGRO_TIMER *timer = NULL;
   ALLEGRO_BITMAP *xy_matrix = NULL;
   bool redraw = true;
-  int coordinates[12] = {60, 60, 50, 200, 50, 10, 100, 200, 100, 0, 0, 0};
+  int coordinates[12] = {60, 60, 50,
+                        200, 300, 10,
+                        100, 200, 100,
+                         70, 30, 10};
+  int bitmap_info[3] = {XYMATRIX_WIDTH, XYMATRIX_HEIGHT};
   char * z_buffer;
   z_buffer = malloc(sizeof(*z_buffer) * 256 * 256);
   int angles[4] = {0, 0, 0, 0};
@@ -29,12 +32,6 @@ int main()
     fprintf(stderr, "failed to initialize allegro!\n");
     return -1;
   }
-
-  timer = al_create_timer(1.0);
-   if(!timer) {
-      fprintf(stderr, "failed to create timer!\n");
-      return -1;
-   }
 
   if(!al_install_keyboard()) {
     fprintf(stderr, "failed to initialize the keyboard!\n");
@@ -65,9 +62,7 @@ int main()
     return -1;
   }
   al_register_event_source(event_queue, al_get_display_event_source(display));
-  al_register_event_source(event_queue, al_get_timer_event_source(timer));
   al_register_event_source(event_queue, al_get_keyboard_event_source());
-  al_start_timer(timer);
 
   int a = 0;
 
@@ -75,10 +70,7 @@ int main()
   do{
     ALLEGRO_EVENT ev;
     al_wait_for_event(event_queue, &ev);
-    if(ev.type == ALLEGRO_EVENT_TIMER){
-       redraw = true;
-    }
-    else if(ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE || ev.keyboard.keycode == ALLEGRO_KEY_ESCAPE) {
+    if(ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE || ev.keyboard.keycode == ALLEGRO_KEY_ESCAPE) {
       break;
     }
     else if(ev.type == ALLEGRO_EVENT_KEY_DOWN) {
@@ -100,14 +92,18 @@ int main()
           break;
         }
       }
+      redraw = true;
+      al_unregister_event_source(event_queue, al_get_keyboard_event_source());
     }
-    if(redraw && al_is_event_queue_empty(event_queue)){
+    if(redraw){
       ALLEGRO_LOCKED_REGION *locked;
       unsigned char *data;
-
+      unsigned int temp;
       locked = al_lock_bitmap(xy_matrix, ALLEGRO_PIXEL_FORMAT_BGR_888, ALLEGRO_LOCK_READWRITE);
       data = locked->data;
-      f(data, z_buffer, XYMATRIX_WIDTH, XYMATRIX_HEIGHT, coordinates, angles);
+      bitmap_info[2] = locked->pitch;
+      f(data, z_buffer, bitmap_info, coordinates, angles, &temp);
+      printf("%d\n", temp);
       // for(int j = 0; j < 256; ++j){
       //   for(int i = 0; i < 256; ++i){
       //     data[i*3 + j*locked->pitch] = 255;
@@ -127,10 +123,13 @@ int main()
       a += 64;
       a %= 318;
       al_flip_display();
+      for(int i = 0; i < 4; ++i) printf("x[%d]=%d, y[%d]=%d, z[%d]=%d\n", i, coordinates[i*3], i, coordinates[i*3 + 1], i, coordinates[i*3 + 2]);
+      al_register_event_source(event_queue, al_get_keyboard_event_source());
     }
 
   }  while(1);
   // for(int i = 0; i < 256*256; ++i) printf("%c", z_buffer[i]);
+
   free(z_buffer);
   al_destroy_bitmap(xy_matrix);
   al_destroy_display(display);
