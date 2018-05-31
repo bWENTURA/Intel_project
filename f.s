@@ -3,6 +3,7 @@ global f
 
 section .data
 	sorted_array:	times 16 db	0
+	temp_floating: times 64 db 0
 
 f:
 	push rbp
@@ -146,20 +147,26 @@ swift_loop_second:
 
 			;end of section which sort coordinates
 
+	movsxd r10, DWORD[rcx]
+	movsxd r11, DWORD[rcx + 12]
+	movsxd r12, DWORD[rcx + 4]
+	movsxd r13, DWORD[rcx + 16]
+	sub r10, r11
+	sub r12, r13
+	movq xmm0, r10
+	movq xmm1, r12
+	divsd xmm1, xmm0
+
+	; movsd xmm0, [temp_floating]
+	; movsd xmm0, [r9]
+	; movsd xmm1, [r9]
+	; mulsd xmm0, xmm1
+	; movsd [r9], xmm0
 
 
 
 
 
-
-	; mov r10d, DWORD[sorted_array]
-	; mov DWORD[rcx + 4], r10d
-	; mov r10d, DWORD[sorted_array + 4]
-	; mov DWORD[rcx + 16], r10d
-	; mov r10d, DWORD[sorted_array + 8]
-	; mov DWORD[rcx + 28], r10d
-	; mov r10d, DWORD[sorted_array + 12]
-	; mov DWORD[rcx + 40], r10d
 
 
 
@@ -168,6 +175,7 @@ swift_loop_second:
 			;end of second section
 
 exit:
+
 	mov rsp, rbp
 	pop rbp
 	ret

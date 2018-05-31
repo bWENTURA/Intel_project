@@ -98,12 +98,13 @@ int main()
     if(redraw){
       ALLEGRO_LOCKED_REGION *locked;
       unsigned char *data;
-      unsigned int temp;
+      // unsigned int temp;
+      double temp = 3.0;
       locked = al_lock_bitmap(xy_matrix, ALLEGRO_PIXEL_FORMAT_BGR_888, ALLEGRO_LOCK_READWRITE);
       data = locked->data;
       bitmap_info[2] = locked->pitch;
       f(data, z_buffer, bitmap_info, coordinates, angles, &temp);
-      printf("%d\n", temp);
+      printf("%lf\n", temp);
       // for(int j = 0; j < 256; ++j){
       //   for(int i = 0; i < 256; ++i){
       //     data[i*3 + j*locked->pitch] = 255;
