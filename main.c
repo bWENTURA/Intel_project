@@ -20,8 +20,8 @@ int main()
   ALLEGRO_BITMAP *xy_matrix = NULL;
   bool redraw = true;
   int coordinates[12] = {60, 60, 50,
-                        200, 300, 10,
-                        100, 200, 100,
+                        200, 200, 10,
+                        100, 250, 100,
                          70, 30, 10};
   int bitmap_info[3] = {XYMATRIX_WIDTH, XYMATRIX_HEIGHT};
   char * z_buffer;

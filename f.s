@@ -3,11 +3,13 @@ global f
 
 section .data
 	temp_integer:	times 16 db	0
-	temp_floating: times 32 db 0
+	temp_double: times 32 db 0
 	colors:	times 4 db 0
 	temp_coordinates: times 144 db 0
 	temp_calculations: times 48 db 0
 	temp_sorted_pair: times	16 db 0
+	iterator_1: times 4 db 0
+	iterator_2: times 4 db 0
 
 f:
 	push rbp
@@ -214,6 +216,7 @@ loop_sets_inside:
 
 			;section filling the bitmap with values
 
+	push r9
 
 	mov r12d, DWORD[rdx]
 	mov DWORD[temp_integer], r12d
@@ -268,31 +271,36 @@ loop_sets_inside:
 	cvtsi2sd xmm1, r10
 	cvtsi2sd xmm0, r12
 	divsd xmm0, xmm1
-	cvtsi2sd xmm2, DWORD[rcx]
-	cvtsi2sd xmm1, DWORD[rcx + 4]
+	cvtsi2sd xmm2, DWORD[rcx + 24]
+	cvtsi2sd xmm1, DWORD[rcx + 28]
 	mulsd xmm2, xmm0
 	subsd xmm1, xmm2
 	movsd QWORD[temp_calculations + 32], xmm0
 	movsd QWORD[temp_calculations + 40], xmm1
 
-	movsxd r10, DWORD[rbx + 4]
-	movsxd r11, DWORD[rbx + 16]
-	movsxd r12, DWORD[rbx + 28]
+	movsxd r9, DWORD[rbx + 4]
+	movsxd r10, DWORD[rbx + 16]
+	movsxd r11, DWORD[rbx + 28]
+
+	mov rax, 2
+	mov rbx, temp_calculations
+	sub rbx, 16
 
 loop_middle:
-	mov rbx, temp_calculations
-	mov rax, 2
+	add rbx, 16
+	dec r9
 loop_inside:
 	mov r12, rdi
+	inc r9
 
-	cvtsi2sd xmm0, r10
+	cvtsi2sd xmm0, r9
 	subsd xmm0, [rbx + 8]
 	divsd xmm0, [rbx]
 	mov r13, 3
 	cvtsi2sd xmm1, r13
 	mulsd xmm0, xmm1
 
-	cvtsi2sd xmm1, r10
+	cvtsi2sd xmm1, r9
 	subsd xmm1, [rbx + 24]
 	divsd xmm1, [rbx + 16]
 	mov r13, 3
@@ -300,7 +308,7 @@ loop_inside:
 	mulsd xmm1, xmm2
 
 	cvtsi2sd xmm2, DWORD[temp_integer + 8]
-	cvtsi2sd xmm3, r10
+	cvtsi2sd xmm3, r9
 	mulsd xmm2, xmm3
 
 	addsd xmm0, xmm2
@@ -320,26 +328,31 @@ loop_inside:
 
 skip_change:
 	sub r14, r13
+	inc r14
 	add r12, r13
 
 color_loop:
-	mov BYTE[r12], 60
-	mov BYTE[r12 + 1], 60
-	mov BYTE[r12 + 2], 60
-	add r12, 3
-	dec r14
+	mov BYTE[r12], 90
+	; mov BYTE[r12 + 1], 60
+	; mov BYTE[r12 + 2], 60
+	add r12, 1
+	sub r14, 1
 	cmp r14, 0
 	jne color_loop
 
-	inc r10
-	cmp r10, r11
+	; inc r9
+	cmp r9, r10
 	jne loop_inside
+
+	mov r10, r11
 
 	dec rax
 	cmp rax, 0
 	jne loop_middle
 
-	cvtsi2sd xmm1, r14
+	; pop r9
+	cvtsi2sd xmm1, r11
+	pop r9
 	movq [r9], xmm1
 
 
