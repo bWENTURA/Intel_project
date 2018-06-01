@@ -4,7 +4,7 @@ global f
 section .data
 	temp_integer:	times 20 db	0
 	temp_double: times 32 db 0
-	colors:	times 12 db 0
+	colours:	times 12 db 0
 	temp_coordinates: times 144 db 0
 	temp_calculations: times 72 db 0
 	temp_sorted_pair: times	16 db 0
@@ -218,28 +218,28 @@ loop_sets_inside:
 
 	push r9
 
-	mov BYTE[colors], 255
-	mov BYTE[colors + 1], 0
-	mov BYTE[colors + 2], 0
-	mov BYTE[colors + 3], 0
-	mov BYTE[colors + 4], 0
-	mov BYTE[colors + 5], 255
-	mov BYTE[colors + 6], 0
-	mov BYTE[colors + 7], 255
-	mov BYTE[colors + 8], 0
-	mov BYTE[colors + 9], 127
-	mov BYTE[colors + 10], 127
-	mov BYTE[colors + 11], 127
+	mov BYTE[colours], 255
+	mov BYTE[colours + 1], 0
+	mov BYTE[colours + 2], 0
+	mov BYTE[colours + 3], 0
+	mov BYTE[colours + 4], 0
+	mov BYTE[colours + 5], 255
+	mov BYTE[colours + 6], 0
+	mov BYTE[colours + 7], 255
+	mov BYTE[colours + 8], 0
+	mov BYTE[colours + 9], 127
+	mov BYTE[colours + 10], 127
+	mov BYTE[colours + 11], 127
 
 	mov r12d, DWORD[rdx]
 	mov DWORD[temp_integer], r12d
 	mov r12d, DWORD[rdx + 8]
 	mov DWORD[temp_integer + 4], r12d
 
-	mov DWORD[iterator_2], 1
+	mov DWORD[iterator_2], 4
 	mov rbx, temp_coordinates
 	sub rbx, 36
-	mov r15, colors
+	mov r15, colours
 	sub r15, 3
 
 loop_outside:
@@ -391,7 +391,7 @@ loop_inside:
 skip_change:
 	mov r14, r11
 	sub r12, r11
-	inc r12
+	inc r12	;;;what depends?
 
 	cvtsi2sd xmm0, r11
 	mov r11, 3
@@ -401,6 +401,16 @@ skip_change:
 	cvtsd2si r11, xmm1
 
 	add r10, r11
+
+	cvtsi2sd xmm0, DWORD[temp_integer + 8]
+	cvtsi2sd xmm1, DWORD[rcx]
+	mulsd xmm0, xmm1
+	cvtsd2si r11, xmm0
+
+	add r11, r14
+	mov QWORD[temp_double], r11
+	mov r11, rsi
+	add r11, QWORD[temp_double]
 
 	cvtsi2sd xmm0, DWORD[temp_integer + 8]		;y
 	cvtsi2sd xmm1, DWORD[rbx + 4]							;y0
@@ -412,7 +422,8 @@ skip_change:
 	cvtsi2sd xmm3, DWORD[rbx + 8]							;z0
 	cvtsi2sd xmm2, DWORD[rbx]									;x0
 
-color_loop:
+colour_loop:
+	push r14
 	cvtsi2sd xmm1, r14												;x
 	movsd xmm4, QWORD[temp_calculations + 48]
 	movsd xmm5, QWORD[temp_calculations + 64]
@@ -424,19 +435,27 @@ color_loop:
 	addsd xmm1, xmm3
 	cvtsd2si r14, xmm1
 
-	;HERE check z-buffer and color if possible
+	cmp r14b, BYTE[r11]
+	jb skip_colour
+	;HERE check z-buffer and colour if possible
 
-
-
+	mov BYTE[r11], r14b
 	mov r14b, BYTE[r15]
 	mov BYTE[r10], r14b
 	mov r14b, BYTE[r15 + 1]
 	mov BYTE[r10 + 1], r14b
 	mov r14b, BYTE[r15 + 2]
 	mov BYTE[r10 + 2], r14b
+
+
+skip_colour:
 	add r10, 3
-	sub r12, 1
-	jne color_loop
+	pop r14
+	inc r14
+	inc r11
+	dec r12
+	cmp r12, 0
+	jne colour_loop
 
 	cmp DWORD[temp_integer + 8], r9d
 	jne loop_inside
