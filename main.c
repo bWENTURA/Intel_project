@@ -7,8 +7,8 @@
 
 const int SCREEN_W = 512;
 const int SCREEN_H = 512;
-const int XYMATRIX_WIDTH = 256;
-const int XYMATRIX_HEIGHT = 256;
+const int XYMATRIX_WIDTH = 512;
+const int XYMATRIX_HEIGHT = 512;
 enum ANGLES{
   SWIFT_UP, SWIFT_DOWN, SWIFT_LEFT, SWIFT_RIGHT
 };
@@ -19,13 +19,13 @@ int main()
   ALLEGRO_EVENT_QUEUE *event_queue = NULL;
   ALLEGRO_BITMAP *xy_matrix = NULL;
   bool redraw = true;
-  int coordinates[12] = {60, 60, 50,
+  int coordinates[12] = {60, 100, 50,
                         200, 200, 10,
                         100, 250, 100,
                          70, 30, 10};
   int bitmap_info[3] = {XYMATRIX_WIDTH, XYMATRIX_HEIGHT};
   char * z_buffer;
-  z_buffer = malloc(sizeof(*z_buffer) * 256 * 256);
+  z_buffer = malloc(sizeof(*z_buffer) * XYMATRIX_WIDTH * XYMATRIX_WIDTH);
   int angles[4] = {0, 0, 0, 0};
 
   if(!al_init()) {
@@ -105,7 +105,7 @@ int main()
       data = locked->data;
       bitmap_info[2] = locked->pitch;
       f(data, z_buffer, bitmap_info, coordinates, angles, &temp);
-      printf("%d\n", locked->pitch);
+      // printf("%d\n", locked->pitch);
       printf("%lf\n", temp);
       // for(int j = 0; j < 256; ++j){
       //   for(int i = 0; i < 256; ++i){
