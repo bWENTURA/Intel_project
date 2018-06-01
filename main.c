@@ -96,6 +96,7 @@ int main()
       al_unregister_event_source(event_queue, al_get_keyboard_event_source());
     }
     if(redraw){
+      for(int i = 0; i < 4; ++i) printf("x[%d]=%d, y[%d]=%d, z[%d]=%d\n", i, coordinates[i*3], i, coordinates[i*3 + 1], i, coordinates[i*3 + 2]);
       ALLEGRO_LOCKED_REGION *locked;
       unsigned char *data;
       // unsigned int temp;
@@ -104,6 +105,7 @@ int main()
       data = locked->data;
       bitmap_info[2] = locked->pitch;
       f(data, z_buffer, bitmap_info, coordinates, angles, &temp);
+      printf("%d\n", locked->pitch);
       printf("%lf\n", temp);
       // for(int j = 0; j < 256; ++j){
       //   for(int i = 0; i < 256; ++i){
@@ -124,7 +126,6 @@ int main()
       a += 64;
       a %= 318;
       al_flip_display();
-      for(int i = 0; i < 4; ++i) printf("x[%d]=%d, y[%d]=%d, z[%d]=%d\n", i, coordinates[i*3], i, coordinates[i*3 + 1], i, coordinates[i*3 + 2]);
       al_register_event_source(event_queue, al_get_keyboard_event_source());
     }
 

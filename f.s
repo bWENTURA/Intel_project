@@ -2,8 +2,8 @@ section .text
 global f
 
 section .data
-	sorted_array:	times 16 db	0
-	temp_floating: times 64 db 0
+	temp_integer:	times 16 db	0
+	temp_floating: times 16 db 0
 
 f:
 	push rbp
@@ -40,11 +40,11 @@ bitmap_clear_inside_loop:
 
 
 
-	mov r10, rdx
+	push rdx
 	movsxd rax, DWORD[rdx]
 	movsxd r10, DWORD[rdx + 4]
 	mul r10
-	mov rdx, r10
+	pop rdx
 
 	mov r10, rsi
 z_buffer_clear_loop:
@@ -104,7 +104,7 @@ skip_fourth:
 
 skip_fifth:
 
-	mov r15, sorted_array
+	mov r15, temp_integer
 	mov DWORD[r15], r10d
 	mov DWORD[r15 + 4], r11d
 	mov DWORD[r15 + 8], r12d
@@ -114,7 +114,7 @@ skip_fifth:
 	mov r10, 3
 	mov r11, rcx
 	add r11, 4
-	mov r12, sorted_array
+	mov r12, temp_integer
 swift_loop_first:
 	mov r13d, DWORD[r12]
 	mov r14, r11
@@ -153,15 +153,55 @@ swift_loop_second:
 	movsxd r13, DWORD[rcx + 16]
 	sub r10, r11
 	sub r12, r13
-	movq xmm0, r10
-	movq xmm1, r12
-	divsd xmm1, xmm0
 
-	; movsd xmm0, [temp_floating]
-	; movsd xmm0, [r9]
-	; movsd xmm1, [r9]
-	; mulsd xmm0, xmm1
-	; movsd [r9], xmm0
+	; mov QWORD[temp_floating], r10
+	cvtsi2sd xmm1, r10
+	cvtsi2sd xmm0, r12
+	divsd xmm0, xmm1
+	cvtsi2sd xmm2, DWORD[rcx]
+	cvtsi2sd xmm1, DWORD[rcx + 4]
+	mulsd xmm2, xmm0
+	subsd xmm1, xmm2
+	movsd QWORD[temp_floating], xmm0
+	movsd QWORD[temp_floating + 8], xmm1
+
+	mov r12d, DWORD[rdx]
+	mov DWORD[temp_integer], r12d
+	mov r12d, DWORD[rdx + 4]
+	mov DWORD[temp_integer + 4], r12d
+	mov r12d, DWORD[rdx + 8]
+	mov DWORD[temp_integer + 8], r12d
+
+	push rdx
+	movsxd r10, DWORD[rcx + 4]
+	movsxd r15, DWORD[rcx + 16]
+loop:
+	mov r12, rdi
+	cvtsi2sd xmm2, r10
+	subsd xmm2, xmm1
+	divsd xmm2, xmm0
+	cvtsd2si r11, xmm2
+	movsxd rax, DWORD[temp_integer + 8]
+	mul r10
+	mov r13, rax
+	mov rax, r11
+	mov r14, 3
+	mul r14
+	add rax, r13
+
+	add r12, rax
+	mov BYTE[r12], 60
+	mov BYTE[r12 + 1], 60
+	mov BYTE[r12 + 2], 60
+
+	add r10, 1
+	cmp r10, r15
+	jne loop
+
+	pop rdx
+
+	; cvtsi2sd xmm2, r11
+	movq [r9], xmm1
 
 
 
@@ -173,7 +213,7 @@ swift_loop_second:
 
 
 			;end of second section
-
+	pop rdx
 exit:
 
 	mov rsp, rbp
