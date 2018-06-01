@@ -3,7 +3,11 @@ global f
 
 section .data
 	temp_integer:	times 16 db	0
-	temp_floating: times 16 db 0
+	temp_floating: times 32 db 0
+	colors:	times 4 db 0
+	temp_coordinates: times 144 db 0
+	temp_calculations: times 48 db 0
+	temp_sorted_pair: times	16 db 0
 
 f:
 	push rbp
@@ -147,23 +151,69 @@ swift_loop_second:
 
 			;end of section which sort coordinates
 
-	movsxd r10, DWORD[rcx]
-	movsxd r11, DWORD[rcx + 12]
-	movsxd r12, DWORD[rcx + 4]
-	movsxd r13, DWORD[rcx + 16]
-	sub r10, r11
-	sub r12, r13
+			;store sets of coordinates
 
-	; mov QWORD[temp_floating], r10
-	cvtsi2sd xmm1, r10
-	cvtsi2sd xmm0, r12
-	divsd xmm0, xmm1
-	cvtsi2sd xmm2, DWORD[rcx]
-	cvtsi2sd xmm1, DWORD[rcx + 4]
-	mulsd xmm2, xmm0
-	subsd xmm1, xmm2
-	movsd QWORD[temp_floating], xmm0
-	movsd QWORD[temp_floating + 8], xmm1
+  mov r10, rcx
+	mov rax, temp_coordinates
+	mov r12, 2
+	mov r13, 1
+	sub r10, 12
+loop_sets_outside:
+	add r13, 1
+	add r10, 12
+	mov r15, r10
+loop_sets_inside:
+	add r15, 12
+	mov r11d, DWORD[r10]
+	mov DWORD[rax], r11d
+	mov r11d, DWORD[r10 + 4]
+	mov DWORD[rax + 4], r11d
+	mov r11d, DWORD[r10 + 8]
+	mov DWORD[rax + 8], r11d
+	mov r11d, DWORD[r15]
+	mov DWORD[rax + 12], r11d
+	mov r11d, DWORD[r15 + 4]
+	mov DWORD[rax + 16], r11d
+	mov r11d, DWORD[r15 + 8]
+	mov DWORD[rax + 20], r11d
+	mov r11d, DWORD[r15 + 12]
+	mov DWORD[rax + 24], r11d
+	mov r11d, DWORD[r15 + 16]
+	mov DWORD[rax + 28], r11d
+	mov r11d, DWORD[r15 + 20]
+	mov DWORD[rax + 32], r11d
+	add rax, 36
+	dec r13
+	cmp r13, 0
+	jne loop_sets_inside
+	dec r12
+	cmp r12, 0
+	jne loop_sets_outside
+
+	mov r10, rcx
+	mov r11d, DWORD[r10]
+	mov DWORD[rax], r11d
+	mov r11d, DWORD[r10 + 4]
+	mov DWORD[rax + 4], r11d
+	mov r11d, DWORD[r10 + 8]
+	mov DWORD[rax + 8], r11d
+	mov r11d, DWORD[r10 + 12]
+	mov DWORD[rax + 12], r11d
+	mov r11d, DWORD[r10 + 16]
+	mov DWORD[rax + 16], r11d
+	mov r11d, DWORD[r10 + 20]
+	mov DWORD[rax + 20], r11d
+	mov r11d, DWORD[r10 + 36]
+	mov DWORD[rax + 24], r11d
+	mov r11d, DWORD[r10 + 40]
+	mov DWORD[rax + 28], r11d
+	mov r11d, DWORD[r10 + 44]
+	mov DWORD[rax + 32], r11d
+
+			;temp_coordinates set is good
+
+			;section filling the bitmap with values
+
 
 	mov r12d, DWORD[rdx]
 	mov DWORD[temp_integer], r12d
@@ -172,35 +222,124 @@ swift_loop_second:
 	mov r12d, DWORD[rdx + 8]
 	mov DWORD[temp_integer + 8], r12d
 
-	push rdx
-	movsxd r10, DWORD[rcx + 4]
-	movsxd r15, DWORD[rcx + 16]
-loop:
-	mov r12, rdi
-	cvtsi2sd xmm2, r10
-	subsd xmm2, xmm1
-	divsd xmm2, xmm0
-	cvtsd2si r11, xmm2
-	movsxd rax, DWORD[temp_integer + 8]
-	mul r10
-	mov r13, rax
-	mov rax, r11
-	mov r14, 3
-	mul r14
-	add rax, r13
+	mov rbx, temp_coordinates
 
-	add r12, rax
+	movsxd r10, DWORD[rbx]
+	movsxd r11, DWORD[rbx + 12]
+	movsxd r12, DWORD[rbx + 4]
+	movsxd r13, DWORD[rbx + 16]
+	sub r10, r11
+	sub r12, r13
+
+	cvtsi2sd xmm1, r10
+	cvtsi2sd xmm0, r12
+	divsd xmm0, xmm1
+	cvtsi2sd xmm2, DWORD[rcx]
+	cvtsi2sd xmm1, DWORD[rcx + 4]
+	mulsd xmm2, xmm0
+	subsd xmm1, xmm2
+	movsd QWORD[temp_calculations], xmm0
+	movsd QWORD[temp_calculations + 8], xmm1
+
+	movsxd r10, DWORD[rbx]
+	movsxd r11, DWORD[rbx + 24]
+	movsxd r12, DWORD[rbx + 4]
+	movsxd r13, DWORD[rbx + 28]
+	sub r10, r11
+	sub r12, r13
+
+	cvtsi2sd xmm1, r10
+	cvtsi2sd xmm0, r12
+	divsd xmm0, xmm1
+	cvtsi2sd xmm2, DWORD[rcx]
+	cvtsi2sd xmm1, DWORD[rcx + 4]
+	mulsd xmm2, xmm0
+	subsd xmm1, xmm2
+	movsd QWORD[temp_calculations + 16], xmm0
+	movsd QWORD[temp_calculations + 24], xmm1
+
+	movsxd r10, DWORD[rbx + 12]
+	movsxd r11, DWORD[rbx + 24]
+	movsxd r12, DWORD[rbx + 16]
+	movsxd r13, DWORD[rbx + 28]
+	sub r10, r11
+	sub r12, r13
+
+	cvtsi2sd xmm1, r10
+	cvtsi2sd xmm0, r12
+	divsd xmm0, xmm1
+	cvtsi2sd xmm2, DWORD[rcx]
+	cvtsi2sd xmm1, DWORD[rcx + 4]
+	mulsd xmm2, xmm0
+	subsd xmm1, xmm2
+	movsd QWORD[temp_calculations + 32], xmm0
+	movsd QWORD[temp_calculations + 40], xmm1
+
+	movsxd r10, DWORD[rbx + 4]
+	movsxd r11, DWORD[rbx + 16]
+	movsxd r12, DWORD[rbx + 28]
+
+loop_middle:
+	mov rbx, temp_calculations
+	mov rax, 2
+loop_inside:
+	mov r12, rdi
+
+	cvtsi2sd xmm0, r10
+	subsd xmm0, [rbx + 8]
+	divsd xmm0, [rbx]
+	mov r13, 3
+	cvtsi2sd xmm1, r13
+	mulsd xmm0, xmm1
+
+	cvtsi2sd xmm1, r10
+	subsd xmm1, [rbx + 24]
+	divsd xmm1, [rbx + 16]
+	mov r13, 3
+	cvtsi2sd xmm2, r13
+	mulsd xmm1, xmm2
+
+	cvtsi2sd xmm2, DWORD[temp_integer + 8]
+	cvtsi2sd xmm3, r10
+	mulsd xmm2, xmm3
+
+	addsd xmm0, xmm2
+	cvtsd2si r13, xmm0
+
+	addsd xmm1, xmm2
+	cvtsd2si r14, xmm1
+
+	cmp r13, r14
+	jb skip_change
+
+	mov r15, r13
+	mov r13, r14
+	mov r14, r15
+
+	movsd xmm0, xmm1
+
+skip_change:
+	sub r14, r13
+	add r12, r13
+
+color_loop:
 	mov BYTE[r12], 60
 	mov BYTE[r12 + 1], 60
 	mov BYTE[r12 + 2], 60
+	add r12, 3
+	dec r14
+	cmp r14, 0
+	jne color_loop
 
-	add r10, 1
-	cmp r10, r15
-	jne loop
+	inc r10
+	cmp r10, r11
+	jne loop_inside
 
-	pop rdx
+	dec rax
+	cmp rax, 0
+	jne loop_middle
 
-	; cvtsi2sd xmm2, r11
+	cvtsi2sd xmm1, r14
 	movq [r9], xmm1
 
 
@@ -213,7 +352,6 @@ loop:
 
 
 			;end of second section
-	pop rdx
 exit:
 
 	mov rsp, rbp
