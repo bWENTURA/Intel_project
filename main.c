@@ -21,10 +21,10 @@ int main()
   bool redraw = true;
   int coordinates[12] = {60, 100, 50,
                         200, 200, 10,
-                        100, 250, 100,
+                        100, 100, 100,
                          70, 30, 10};
   int bitmap_info[3] = {XYMATRIX_WIDTH, XYMATRIX_HEIGHT};
-  char * z_buffer;
+  double * z_buffer;
   z_buffer = malloc(sizeof(*z_buffer) * XYMATRIX_WIDTH * XYMATRIX_WIDTH);
   int angles[4] = {0, 0, 0, 0};
 
@@ -127,10 +127,13 @@ int main()
       a %= 318;
       al_flip_display();
       al_register_event_source(event_queue, al_get_keyboard_event_source());
+      // for(int i = 0; i < XYMATRIX_WIDTH*XYMATRIX_HEIGHT; ++i)
+      //   if(z_buffer[i]) printf("%lf ", z_buffer[i]);
     }
 
   }  while(1);
-  // for(int i = 0; i < 256*256; ++i) printf("%c", z_buffer[i]);
+  // for(int i = 0; i < XYMATRIX_WIDTH*XYMATRIX_HEIGHT; ++i)
+  //   printf("%lf ", z_buffer[i]);
 
   free(z_buffer);
   al_destroy_bitmap(xy_matrix);

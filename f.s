@@ -53,9 +53,11 @@ bitmap_clear_inside_loop:
 	pop rdx
 
 	mov r10, rsi
+	mov r15, 0
+	cvtsi2sd xmm0, r15
 z_buffer_clear_loop:
-	mov BYTE[r10], 0
-	inc r10
+	movsd QWORD[r10], xmm0
+	add r10, 8
 	dec rax
 	jne z_buffer_clear_loop
 
@@ -362,6 +364,10 @@ loop_outside:
 
 loop_middle:
 	add rax, 16
+
+	cmp DWORD[temp_integer + 8], r9d
+	jz skip_y
+
 	dec DWORD[temp_integer + 8]
 loop_inside:
 	mov r10, rdi
@@ -391,7 +397,7 @@ loop_inside:
 skip_change:
 	mov r14, r11
 	sub r12, r11
-	inc r12	;;;what depends?
+	jz skip_z_and_colour
 
 	cvtsi2sd xmm0, r11
 	mov r11, 3
@@ -403,11 +409,15 @@ skip_change:
 	add r10, r11
 
 	cvtsi2sd xmm0, DWORD[temp_integer + 8]
-	cvtsi2sd xmm1, DWORD[rcx]
+	cvtsi2sd xmm1, DWORD[rdx]
+	cvtsi2sd xmm2, r14
+	mov r11, 8
+	cvtsi2sd xmm3, r11
 	mulsd xmm0, xmm1
+	addsd xmm0, xmm2
+	mulsd xmm0, xmm3
 	cvtsd2si r11, xmm0
 
-	add r11, r14
 	mov QWORD[temp_double], r11
 	mov r11, rsi
 	add r11, QWORD[temp_double]
@@ -424,22 +434,27 @@ skip_change:
 
 colour_loop:
 	push r14
+
 	cvtsi2sd xmm1, r14												;x
 	movsd xmm4, QWORD[temp_calculations + 48]
 	movsd xmm5, QWORD[temp_calculations + 64]
+	movsd xmm6, QWORD[r11]
 
 	subsd xmm1, xmm2
 	mulsd xmm1, xmm4
 	addsd xmm1, xmm0
 	divsd xmm1, xmm5
 	addsd xmm1, xmm3
-	cvtsd2si r14, xmm1
+	movsd xmm7, xmm1
+	subsd xmm7, xmm6
+	movsd QWORD[temp_double + 8], xmm7
+	mov r14, 0
+	cvtsi2sd xmm7, r14
 
-	cmp r14b, BYTE[r11]
-	jb skip_colour
+	comisd xmm7, [temp_double + 8]
+	jnc skip_colour
 	;HERE check z-buffer and colour if possible
 
-	mov BYTE[r11], r14b
 	mov r14b, BYTE[r15]
 	mov BYTE[r10], r14b
 	mov r14b, BYTE[r15 + 1]
@@ -447,31 +462,40 @@ colour_loop:
 	mov r14b, BYTE[r15 + 2]
 	mov BYTE[r10 + 2], r14b
 
+	movsd QWORD[r11], xmm1
 
 skip_colour:
-	add r10, 3
 	pop r14
 	inc r14
-	inc r11
+	add r10, 3
+	add r11, 8
 	dec r12
 	cmp r12, 0
 	jne colour_loop
 
+skip_z_and_colour:
+
 	cmp DWORD[temp_integer + 8], r9d
-	jne loop_inside
+	jnz loop_inside
+
+skip_y:
 
 	mov r9d, DWORD[temp_integer + 12]
 
-	sub DWORD[iterator_1], 1
-	jne loop_middle
+	dec DWORD[iterator_1]
+	jnz loop_middle
 
 	dec DWORD[iterator_2]
-	jne loop_outside
+	jnz loop_outside
 ;
 	pop r9
-; 	mov rbx, temp_coordinates
+	; mov rbx, 0.0000000000001
 	; movsd xmm1, QWORD[temp_calculations + 56]
-	movq [r9], xmm1
+	; mov eax, DWORD[r9]
+
+	; mov rax, QWORD[temp_double + 8]
+	cvtsi2sd xmm0, QWORD[temp_double]
+	movq [r9], xmm0
 
 
 
