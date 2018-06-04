@@ -1,9 +1,39 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 #include <allegro5/allegro.h>
 #include </home/mylittlemachine/allegro5/include/allegro5/internal/aintern_bitmap.h>
 // #include "allegro5/internal/aintern_bitmap.h"
 #include "f.h"
+
+void sort_indexes(int *coordinates, unsigned char *colours){
+  int temp_arr_int[3];
+  char temp_arr_char[3];
+  for(int i = 1; i < 4; ++i){
+    int j = i;
+    while(j > 0 && coordinates[(j-1)*3 + 1] > coordinates[j*3 + 1]){
+      temp_arr_int[0] = coordinates[(j-1)*3];
+      temp_arr_int[1] = coordinates[(j-1)*3 + 1];
+      temp_arr_int[2] = coordinates[(j-1)*3 + 2];
+      coordinates[(j-1)*3] = coordinates[j*3];
+      coordinates[(j-1)*3 + 1] = coordinates[j*3 + 1];
+      coordinates[(j-1)*3 + 2] = coordinates[j*3 + 2];
+      coordinates[j*3] = temp_arr_int[0];
+      coordinates[j*3 + 1] = temp_arr_int[1];
+      coordinates[j*3 + 2] = temp_arr_int[2];
+      temp_arr_char[0] = colours[(j-1)*3];
+      temp_arr_char[1] = colours[(j-1)*3 + 1];
+      temp_arr_char[2] = colours[(j-1)*3 + 2];
+      colours[(j-1)*3] = colours[j*3];
+      colours[(j-1)*3 + 1] = colours[j*3 + 1];
+      colours[(j-1)*3 + 2] = colours[j*3 + 2];
+      colours[j*3] = temp_arr_char[0];
+      colours[j*3 + 1] = temp_arr_char[1];
+      colours[j*3 + 2] = temp_arr_char[2];
+      --j;
+    }
+  }
+}
 
 const int SCREEN_W = 512;
 const int SCREEN_H = 512;
@@ -19,14 +49,22 @@ int main()
   ALLEGRO_EVENT_QUEUE *event_queue = NULL;
   ALLEGRO_BITMAP *xy_matrix = NULL;
   bool redraw = true;
-  int coordinates[12] = {60, 100, 50,
-                        200, 200, 10,
-                        100, 100, 100,
-                         70, 30, 10};
+  int coordinates[12] = {60, 150, 120,
+                        400, 190, 60,
+                        300, 140, 260,
+                         250, 350, 150};
+  unsigned char colours[12] = {255, 0, 0,
+                              0, 255, 0,
+                              0, 0, 255,
+                              127, 127, 127};
   int bitmap_info[3] = {XYMATRIX_WIDTH, XYMATRIX_HEIGHT};
+  float center[3];
+  center[0] = coordinates[0] + coordinates[3] + coordinates[6] + coordinates[9];
+  center[1] = coordinates[1] + coordinates[4] + coordinates[7] + coordinates[10];
+  center[2] = coordinates[2] + coordinates[5] + coordinates[8] + coordinates[11];
+  for(int i = 0; i < 3; ++i) center[i]/=4;
   double * z_buffer;
   z_buffer = malloc(sizeof(*z_buffer) * XYMATRIX_WIDTH * XYMATRIX_WIDTH);
-  int angles[4] = {0, 0, 0, 0};
 
   if(!al_init()) {
     fprintf(stderr, "failed to initialize allegro!\n");
@@ -64,9 +102,6 @@ int main()
   al_register_event_source(event_queue, al_get_display_event_source(display));
   al_register_event_source(event_queue, al_get_keyboard_event_source());
 
-  int a = 0;
-
-
   do{
     ALLEGRO_EVENT ev;
     al_wait_for_event(event_queue, &ev);
@@ -76,19 +111,39 @@ int main()
     else if(ev.type == ALLEGRO_EVENT_KEY_DOWN) {
       switch(ev.keyboard.keycode) {
         case ALLEGRO_KEY_UP:{
-          angles[SWIFT_UP] = 10;
+          for(int i = 0; i < 4; ++i){
+            float temp_y = (coordinates[i*3 + 1] - center[1]) * cos(1.57) - (coordinates[i*3 + 2] - center[2]) * sin(1.57);
+            float temp_z = (coordinates[i*3 + 1] - center[1]) * sin(1.57) + (coordinates[i*3 + 2] - center[2]) * cos(1.57);
+            coordinates[i*3 + 1] = temp_y + center[1];
+            coordinates[i*3 + 2] = temp_z + center[2];
+          }
           break;
         }
         case ALLEGRO_KEY_DOWN:{
-          angles[SWIFT_DOWN] = 10;
+          for(int i = 0; i < 4; ++i){
+            float temp_y = (coordinates[i*3 + 1] - center[1]) * cos(-1.57) - (coordinates[i*3 + 2] - center[2]) * sin(-1.57);
+            float temp_z = (coordinates[i*3 + 1] - center[1]) * sin(-1.57) + (coordinates[i*3 + 2] - center[2]) * cos(-1.57);
+            coordinates[i*3 + 1] = temp_y + center[1];
+            coordinates[i*3 + 2] = temp_z + center[2];
+          }
           break;
         }
         case ALLEGRO_KEY_LEFT:{
-          angles[SWIFT_LEFT] = 10;
+          for(int i = 0; i < 4; ++i){
+            float temp_x = (coordinates[i*3 + 2] - center[2]) * sin(1.57) + (coordinates[i*3] - center[0]) * cos(1.57);
+            float temp_z = (coordinates[i*3 + 2] - center[2]) * cos(1.57) - (coordinates[i*3] - center[0]) * sin(1.57);
+            coordinates[i*3] = temp_x + center[0];
+            coordinates[i*3 + 2] = temp_z + center[2];
+          }
           break;
         }
         case ALLEGRO_KEY_RIGHT:{
-          angles[SWIFT_RIGHT] = 10;
+          for(int i = 0; i < 4; ++i){
+            float temp_x = (coordinates[i*3 + 2] - center[2]) * sin(-1.57) + (coordinates[i*3] - center[0]) * cos(-1.57);
+            float temp_z = (coordinates[i*3 + 2] - center[2]) * cos(-1.57) - (coordinates[i*3] - center[0]) * sin(-1.57);
+            coordinates[i*3] = temp_x + center[0];
+            coordinates[i*3 + 2] = temp_z + center[2];
+          }
           break;
         }
       }
@@ -96,44 +151,39 @@ int main()
       al_unregister_event_source(event_queue, al_get_keyboard_event_source());
     }
     if(redraw){
-      for(int i = 0; i < 4; ++i) printf("x[%d]=%d, y[%d]=%d, z[%d]=%d\n", i, coordinates[i*3], i, coordinates[i*3 + 1], i, coordinates[i*3 + 2]);
+      // for(int i = 0; i < 4; ++i){
+      //   printf("%d %d %d----%d %d %d\n", coordinates[i*3],  coordinates[i*3 + 1],  coordinates[i*3 + 2], colours[i*3],  colours[i*3 + 1],  colours[i*3 + 2]);
+      // }
+      // printf("\n");
       ALLEGRO_LOCKED_REGION *locked;
       unsigned char *data;
-      // unsigned int temp;
-      double temp = 3.0;
       locked = al_lock_bitmap(xy_matrix, ALLEGRO_PIXEL_FORMAT_BGR_888, ALLEGRO_LOCK_READWRITE);
       data = locked->data;
       bitmap_info[2] = locked->pitch;
-      f(data, z_buffer, bitmap_info, coordinates, angles, &temp);
-      // printf("%d\n", locked->pitch);
-      printf("%lf\n", temp);
-      // for(int j = 0; j < 256; ++j){
-      //   for(int i = 0; i < 256; ++i){
-      //     data[i*3 + j*locked->pitch] = 255;
-      //     data[i*3 + j*locked->pitch + 1] = 255;
-      //     data[i*3 + j*locked->pitch + 2] = 255;
-      //   }
-      // }
-
+      if(locked->pitch < 0){
+        coordinates[1] = XYMATRIX_HEIGHT - coordinates[1];
+        coordinates[4] = XYMATRIX_HEIGHT - coordinates[4];
+        coordinates[7] = XYMATRIX_HEIGHT - coordinates[7];
+        coordinates[10] = XYMATRIX_HEIGHT - coordinates[10];
+      }
+      sort_indexes(coordinates, colours);
+      f(data, z_buffer, bitmap_info, coordinates, colours);
+      if(locked->pitch < 0){
+        coordinates[1] = XYMATRIX_HEIGHT - coordinates[1];
+        coordinates[4] = XYMATRIX_HEIGHT - coordinates[4];
+        coordinates[7] = XYMATRIX_HEIGHT - coordinates[7];
+        coordinates[10] = XYMATRIX_HEIGHT - coordinates[10];
+      }
       data = NULL;
       al_unlock_bitmap(xy_matrix);
-      for(int i = 0; i < 4; ++i){
-        angles[i] = 0;
-      }
       redraw = false;
       al_clear_to_color(al_map_rgb(0,0,0));
-      al_draw_bitmap(xy_matrix, a, a, 0);
-      a += 64;
-      a %= 318;
+      al_draw_bitmap(xy_matrix, 0, 0, 0);
       al_flip_display();
       al_register_event_source(event_queue, al_get_keyboard_event_source());
-      // for(int i = 0; i < XYMATRIX_WIDTH*XYMATRIX_HEIGHT; ++i)
-      //   if(z_buffer[i]) printf("%lf ", z_buffer[i]);
     }
 
   }  while(1);
-  // for(int i = 0; i < XYMATRIX_WIDTH*XYMATRIX_HEIGHT; ++i)
-  //   printf("%lf ", z_buffer[i]);
 
   free(z_buffer);
   al_destroy_bitmap(xy_matrix);

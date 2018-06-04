@@ -62,99 +62,6 @@ z_buffer_clear_loop:
 	jne z_buffer_clear_loop
 
 			;end of bitmap and -buffer section
-
-			;section sorting array of coordinates in correct order, with lowest y coordinate first
-
-	mov r10d, DWORD[rcx + 4]
-	mov r12d, DWORD[rcx + 16]
-	cmp r10d, r12d
-	jb skip_first
-
-	mov r10d, DWORD[rcx + 16]
-	mov r12d, DWORD[rcx + 4]
-
-skip_first:
-
-	mov r11d, DWORD[rcx + 28]
-	mov r13d, DWORD[rcx + 40]
-	cmp r11d, r13d
-	jb skip_second
-
-	mov r11d, DWORD[rcx + 40]
-	mov r13d, DWORD[rcx + 28]
-
-skip_second:
-
-	cmp r10d, r11d
-	jb skip_third
-
-	mov r15d, r10d
-	mov r10d, r11d
-	mov r11d, r15d
-
-skip_third:
-
-	cmp r12d, r13d
-	jb skip_fourth
-
-	mov r15d, r12d
-	mov r12d, r13d
-	mov r13d, r15d
-
-skip_fourth:
-
-	cmp r11d, r12d
-	jb skip_fifth
-
-	mov r15d, r11d
-	mov r11d, r12d
-	mov r12d, r15d
-
-skip_fifth:
-
-	mov r15, temp_integer
-	mov DWORD[r15], r10d
-	mov DWORD[r15 + 4], r11d
-	mov DWORD[r15 + 8], r12d
-	mov DWORD[r15 + 12], r13d
-
-
-	mov r10, 3
-	mov r11, rcx
-	add r11, 4
-	mov r12, temp_integer
-swift_loop_first:
-	mov r13d, DWORD[r12]
-	mov r14, r11
-swift_loop_second:
-	add r14, 12
-	; movsxd rbx, DWORD[r14]
-	; mov QWORD[r9], rb
-	cmp r13d, DWORD[r14 - 12]
-	jne swift_loop_second
-
-	sub r14, 12
-	mov r15d, DWORD[r11]
-	mov r13d, DWORD[r14]
-	mov DWORD[r14], r15d
-	mov DWORD[r11], r13d
-	mov r15d, DWORD[r11 + 4]
-	mov r13d, DWORD[r14 + 4]
-	mov DWORD[r14 + 4], r15d
-	mov DWORD[r11 + 4], r13d
-	mov r15d, DWORD[r11 - 4]
-	mov r13d, DWORD[r14 - 4]
-	mov DWORD[r14 - 4], r15d
-	mov DWORD[r11 - 4], r13d
-
-	add r11, 12
-	add r12, 4
-	dec r10
-	cmp r10, 0
-	jne swift_loop_first
-
-			;end of section which sort coordinates
-
 			;store sets of coordinates
 
   mov r10, rcx
@@ -218,7 +125,6 @@ loop_sets_inside:
 
 			;section filling the bitmap with values
 
-	push r9
 
 	mov BYTE[colours], 255
 	mov BYTE[colours + 1], 0
@@ -241,7 +147,7 @@ loop_sets_inside:
 	mov DWORD[iterator_2], 4
 	mov rbx, temp_coordinates
 	sub rbx, 36
-	mov r15, colours
+	mov r15, r8
 	sub r15, 3
 
 loop_outside:
@@ -445,14 +351,9 @@ colour_loop:
 	addsd xmm1, xmm0
 	divsd xmm1, xmm5
 	addsd xmm1, xmm3
-	movsd xmm7, xmm1
-	subsd xmm7, xmm6
-	movsd QWORD[temp_double + 8], xmm7
-	mov r14, 0
-	cvtsi2sd xmm7, r14
 
-	comisd xmm7, [temp_double + 8]
-	jnc skip_colour
+	comisd xmm1, xmm6
+	jc skip_colour
 	;HERE check z-buffer and colour if possible
 
 	mov r14b, BYTE[r15]
@@ -488,14 +389,6 @@ skip_y:
 	dec DWORD[iterator_2]
 	jnz loop_outside
 ;
-	pop r9
-	; mov rbx, 0.0000000000001
-	; movsd xmm1, QWORD[temp_calculations + 56]
-	; mov eax, DWORD[r9]
-
-	; mov rax, QWORD[temp_double + 8]
-	cvtsi2sd xmm0, QWORD[temp_double]
-	movq [r9], xmm0
 
 
 
