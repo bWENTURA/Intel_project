@@ -6,6 +6,7 @@ section .data
 	temp_double: times 32 db 0
 	colours:	times 12 db 0
 	temp_coordinates: times 144 db 0
+	temp_indexes: times 144 db 0
 	temp_calculations: times 72 db 0
 	temp_sorted_pair: times	16 db 0
 	iterator_1: times 4 db 0
@@ -53,7 +54,7 @@ bitmap_clear_inside_loop:
 	pop rdx
 
 	mov r10, rsi
-	mov r15, 0
+	mov r15, -255
 	cvtsi2sd xmm0, r15
 z_buffer_clear_loop:
 	movsd QWORD[r10], xmm0
@@ -61,20 +62,28 @@ z_buffer_clear_loop:
 	dec rax
 	jne z_buffer_clear_loop
 
-			;end of bitmap and -buffer section
+			;end of bitmap and z-buffer section
 			;store sets of coordinates
 
   mov r10, rcx
 	mov rax, temp_coordinates
+	mov r9, r8
+	push r8
+	mov rbx, temp_indexes
 	mov r12, 2
 	mov r13, 1
 	sub r10, 12
+	sub r9, 4
 loop_sets_outside:
 	add r13, 1
 	add r10, 12
+	add r9, 4
 	mov r15, r10
+	mov	r8, r9
 loop_sets_inside:
 	add r15, 12
+	add r8, 4
+
 	mov r11d, DWORD[r10]
 	mov DWORD[rax], r11d
 	mov r11d, DWORD[r10 + 4]
@@ -93,7 +102,16 @@ loop_sets_inside:
 	mov DWORD[rax + 28], r11d
 	mov r11d, DWORD[r15 + 20]
 	mov DWORD[rax + 32], r11d
+
+	mov r11d, DWORD[r9]
+	mov DWORD[rbx], r11d
+	mov r11d, DWORD[r8]
+	mov DWORD[rbx + 4], r11d
+	mov r11d, DWORD[r8 + 4]
+	mov DWORD[rbx + 8], r11d
+
 	add rax, 36
+	add rbx, 12
 	dec r13
 	cmp r13, 0
 	jne loop_sets_inside
@@ -101,7 +119,10 @@ loop_sets_inside:
 	cmp r12, 0
 	jne loop_sets_outside
 
+	pop r8
+
 	mov r10, rcx
+	mov r9, r8
 	mov r11d, DWORD[r10]
 	mov DWORD[rax], r11d
 	mov r11d, DWORD[r10 + 4]
@@ -121,10 +142,17 @@ loop_sets_inside:
 	mov r11d, DWORD[r10 + 44]
 	mov DWORD[rax + 32], r11d
 
+	mov r11d, DWORD[r9]
+	mov DWORD[rbx], r11d
+	mov r11d, DWORD[r9 + 4]
+	mov DWORD[rbx + 4], r11d
+	mov r11d, DWORD[r9 + 12]
+	mov DWORD[rbx + 8], r11d
+
+
 			;temp_coordinates set is good
 
 			;section filling the bitmap with values
-
 
 	mov BYTE[colours], 255
 	mov BYTE[colours + 1], 0
@@ -147,12 +175,12 @@ loop_sets_inside:
 	mov DWORD[iterator_2], 4
 	mov rbx, temp_coordinates
 	sub rbx, 36
-	mov r15, r8
-	sub r15, 3
+	mov r15, temp_indexes
+	sub r15, 12
 
 loop_outside:
 	add rbx, 36
-	add r15, 3
+	add r15, 12
 
 		;calculating a and b from y = a*x + b
 
@@ -354,8 +382,28 @@ colour_loop:
 
 	comisd xmm1, xmm6
 	jc skip_colour
-	;HERE check z-buffer and colour if possible
 
+	mov r14d, DWORD[r15]
+	add r14d, DWORD[r15 + 4]
+	add r14d, DWORD[r15 + 8]
+
+	push r15
+
+	mov r15, colours
+	cmp r14d, 6
+	je skip_colour_change
+
+	mov r15, colours + 3
+	cmp r14d, 7
+	je skip_colour_change
+
+	mov r15, colours + 6
+	cmp r14d, 8
+	je skip_colour_change
+
+	mov r15, colours + 9
+
+skip_colour_change:
 	mov r14b, BYTE[r15]
 	mov BYTE[r10], r14b
 	mov r14b, BYTE[r15 + 1]
@@ -364,6 +412,8 @@ colour_loop:
 	mov BYTE[r10 + 2], r14b
 
 	movsd QWORD[r11], xmm1
+
+	pop r15
 
 skip_colour:
 	pop r14

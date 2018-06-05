@@ -6,9 +6,9 @@
 // #include "allegro5/internal/aintern_bitmap.h"
 #include "f.h"
 
-void sort_indexes(int *coordinates, unsigned char *colours){
+void sort_indexes(int *coordinates, int *indexes){
   int temp_arr_int[3];
-  char temp_arr_char[3];
+  int temp_int;
   for(int i = 1; i < 4; ++i){
     int j = i;
     while(j > 0 && coordinates[(j-1)*3 + 1] > coordinates[j*3 + 1]){
@@ -21,15 +21,9 @@ void sort_indexes(int *coordinates, unsigned char *colours){
       coordinates[j*3] = temp_arr_int[0];
       coordinates[j*3 + 1] = temp_arr_int[1];
       coordinates[j*3 + 2] = temp_arr_int[2];
-      temp_arr_char[0] = colours[(j-1)*3];
-      temp_arr_char[1] = colours[(j-1)*3 + 1];
-      temp_arr_char[2] = colours[(j-1)*3 + 2];
-      colours[(j-1)*3] = colours[j*3];
-      colours[(j-1)*3 + 1] = colours[j*3 + 1];
-      colours[(j-1)*3 + 2] = colours[j*3 + 2];
-      colours[j*3] = temp_arr_char[0];
-      colours[j*3 + 1] = temp_arr_char[1];
-      colours[j*3 + 2] = temp_arr_char[2];
+      temp_int = indexes[j-1];
+      indexes[j-1] = indexes[j];
+      indexes[j] = temp_int;
       --j;
     }
   }
@@ -53,10 +47,7 @@ int main()
                         400, 190, 60,
                         300, 140, 260,
                          250, 350, 150};
-  unsigned char colours[12] = {255, 0, 0,
-                              0, 255, 0,
-                              0, 0, 255,
-                              127, 127, 127};
+  int indexes[4] = {1, 2, 3, 4};
   int bitmap_info[3] = {XYMATRIX_WIDTH, XYMATRIX_HEIGHT};
   float center[3];
   center[0] = coordinates[0] + coordinates[3] + coordinates[6] + coordinates[9];
@@ -112,8 +103,8 @@ int main()
       switch(ev.keyboard.keycode) {
         case ALLEGRO_KEY_UP:{
           for(int i = 0; i < 4; ++i){
-            float temp_y = (coordinates[i*3 + 1] - center[1]) * cos(1.57) - (coordinates[i*3 + 2] - center[2]) * sin(1.57);
-            float temp_z = (coordinates[i*3 + 1] - center[1]) * sin(1.57) + (coordinates[i*3 + 2] - center[2]) * cos(1.57);
+            float temp_y = (coordinates[i*3 + 1] - center[1]) * cos(-1.57) - (coordinates[i*3 + 2] - center[2]) * sin(-1.57);
+            float temp_z = (coordinates[i*3 + 1] - center[1]) * sin(-1.57) + (coordinates[i*3 + 2] - center[2]) * cos(-1.57);
             coordinates[i*3 + 1] = temp_y + center[1];
             coordinates[i*3 + 2] = temp_z + center[2];
           }
@@ -121,8 +112,8 @@ int main()
         }
         case ALLEGRO_KEY_DOWN:{
           for(int i = 0; i < 4; ++i){
-            float temp_y = (coordinates[i*3 + 1] - center[1]) * cos(-1.57) - (coordinates[i*3 + 2] - center[2]) * sin(-1.57);
-            float temp_z = (coordinates[i*3 + 1] - center[1]) * sin(-1.57) + (coordinates[i*3 + 2] - center[2]) * cos(-1.57);
+            float temp_y = (coordinates[i*3 + 1] - center[1]) * cos(1.57) - (coordinates[i*3 + 2] - center[2]) * sin(1.57);
+            float temp_z = (coordinates[i*3 + 1] - center[1]) * sin(1.57) + (coordinates[i*3 + 2] - center[2]) * cos(1.57);
             coordinates[i*3 + 1] = temp_y + center[1];
             coordinates[i*3 + 2] = temp_z + center[2];
           }
@@ -151,10 +142,10 @@ int main()
       al_unregister_event_source(event_queue, al_get_keyboard_event_source());
     }
     if(redraw){
-      // for(int i = 0; i < 4; ++i){
-      //   printf("%d %d %d----%d %d %d\n", coordinates[i*3],  coordinates[i*3 + 1],  coordinates[i*3 + 2], colours[i*3],  colours[i*3 + 1],  colours[i*3 + 2]);
-      // }
-      // printf("\n");
+      for(int i = 0; i < 4; ++i){
+        printf("%d %d %d----%d\n", coordinates[i*3],  coordinates[i*3 + 1],  coordinates[i*3 + 2], indexes[i]);
+      }
+      printf("\n");
       ALLEGRO_LOCKED_REGION *locked;
       unsigned char *data;
       locked = al_lock_bitmap(xy_matrix, ALLEGRO_PIXEL_FORMAT_BGR_888, ALLEGRO_LOCK_READWRITE);
@@ -166,8 +157,8 @@ int main()
         coordinates[7] = XYMATRIX_HEIGHT - coordinates[7];
         coordinates[10] = XYMATRIX_HEIGHT - coordinates[10];
       }
-      sort_indexes(coordinates, colours);
-      f(data, z_buffer, bitmap_info, coordinates, colours);
+      sort_indexes(coordinates, indexes);
+      f(data, z_buffer, bitmap_info, coordinates, indexes);
       if(locked->pitch < 0){
         coordinates[1] = XYMATRIX_HEIGHT - coordinates[1];
         coordinates[4] = XYMATRIX_HEIGHT - coordinates[4];
